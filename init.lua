@@ -21,11 +21,14 @@ vim.opt.rtp:prepend(lazypath)
 
 -- define and configure plugins
 require('lazy').setup({
-    'tpope/vim-fugitive',         -- git wrapper
-    'mbbill/undotree',            -- undo view
-    'tpope/vim-sleuth',           -- detect tabs automatically
-    'mg979/vim-visual-multi',     -- multicursor editing
-    'lervag/vimtex',              -- latex all-around helper
+    'tpope/vim-commentary',             -- comment line/region
+    'tpope/vim-surround',               -- edit sorrounding with text objects
+    'tpope/vim-fugitive',               -- git wrapper
+    'tpope/vim-sleuth',                 -- detect tabs automatically
+    'vim-scripts/ReplaceWithRegister',  -- replace text object with register content
+    'mbbill/undotree',                  -- undo view
+    'mg979/vim-visual-multi',           -- multicursor editing
+    'lervag/vimtex',                    -- latex all-around helper
     {
         -- quickstart configs for lsp
         'neovim/nvim-lspconfig',
@@ -131,10 +134,10 @@ require('lazy').setup({
                     end,
                 },
                 sources = cmp.config.sources({
-                        {name = 'nvim_lsp'},
-                        {name = 'luasnip'},
-                        {name = 'path'},
-                    }, {{name = 'buffer'}}
+                    {name = 'nvim_lsp'},
+                    {name = 'luasnip'},
+                    {name = 'path'},
+                }, {{name = 'buffer'}}
                 ),
                 mapping = cmp.mapping.preset.insert({
                     ['<c-p>'] = cmp.mapping.select_prev_item(cmp_select),
@@ -145,11 +148,6 @@ require('lazy').setup({
                 })
             })
         end
-    },
-    {
-        -- comment lines/regions
-        'numToStr/Comment.nvim',
-        opts = {}
     },
     {
         -- further text objects
@@ -182,9 +180,10 @@ require('lazy').setup({
         'stevearc/oil.nvim',
         opts = {
             delete_to_trash = true,
-            columns = {'size', 'permissions'},
+            columns = {'mtime', 'size', 'permissions'},
             prompt_save_on_select_new_entry = false,
             skip_confirm_for_simple_edits = true,
+            lsp_rename_autosave = true
         }
     },
     {
@@ -196,16 +195,9 @@ require('lazy').setup({
             winopts = {split = 'belowright new'},
         }
     },
-    {
-        'rebelot/kanagawa.nvim',
-        priority = 55,
-        config = function()
-            require('kanagawa').setup({undercurl = false})
-            vim.cmd.colorscheme('kanagawa-dragon')
-            vim.api.nvim_set_hl(0, 'CursorLine', {link = 'ColorColumn'})
-        end,
-    }
 }, {})
+
+vim.cmd.colorscheme('habamax')
 
 -- use zathura for pdf viewing
 vim.g.vimtex_view_method = 'zathura'
@@ -263,9 +255,6 @@ vim.keymap.set('n', '<leader>h', ':noh<cr>', {silent = true})
 -- move selected text horizontally
 vim.keymap.set('v', '>', '>gv')
 vim.keymap.set('v', '<', '<gv')
-
--- paste on selected text without yanking
-vim.keymap.set('v', 'p', '"_dhp')
 
 -- yank into system register
 vim.keymap.set('v', '<leader>y', '"+y')
