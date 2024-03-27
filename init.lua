@@ -5,6 +5,118 @@ vim.loader.enable()
 vim.g.mapleader = ' '
 vim.g.maplocalleader = vim.g.mapleader
 
+-- hide '~' at buffer end
+vim.opt.fillchars:append({ eob = ' ' })
+
+-- show numbers
+vim.opt.number = true
+vim.opt.relativenumber = true
+
+-- set case insensitiveness, alter with \C
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
+
+-- make undo history everlasting
+vim.opt.undofile = true
+
+-- appropriate indent on new line
+vim.opt.smartindent = true
+vim.opt.breakindent = false
+
+-- live preview substitutions
+vim.opt.inccommand = 'split'
+
+-- define statusline behaviour
+vim.opt.laststatus = 2
+
+-- number of screen lines to keep above and below the cursor.
+vim.opt.scrolloff = 5
+
+-- set proper tab width
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+
+-- number of spaces to use for indentation
+vim.opt.shiftwidth = 4
+
+-- use the appropriate number of spaces to insert a <Tab>
+vim.opt.expandtab = true
+
+-- block swap file creation
+vim.opt.swapfile = false
+
+-- define languages for spelling feature
+vim.opt.spelllang = { 'en_us', 'it' }
+
+-- adjusts default color groups
+vim.opt.background = 'dark'
+
+-- enables 24-bit RGB color
+vim.opt.termguicolors = true
+
+-- highlight the line on which the cursor in on
+vim.opt.cursorline = true
+
+-- keep block cursor style in insert mode
+vim.opt.guicursor = 'i:block'
+
+-- always show signcolumn
+vim.opt.signcolumn = 'auto'
+
+-- highlight column that indicate maximum text width
+vim.opt.colorcolumn = '80'
+
+-- put a message on the last line showing current mode
+vim.opt.showmode = true
+
+-- splits initial position
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+
+-- customize completion menu behaviour
+vim.opt.completeopt = { 'menuone', 'noinsert', 'noselect' }
+
+-- limit showed completion options
+vim.opt.pumheight = 5
+
+-- number of screen lines to use for the command-line window
+vim.opt.cmdwinheight = 5
+
+-- exit insert mode
+vim.keymap.set('i', '<c-c>', '<esc>')
+
+-- move selected text horizontally
+vim.keymap.set('v', '>', '>gv')
+vim.keymap.set('v', '<', '<gv')
+
+-- center search results
+vim.keymap.set('n', 'n', 'nzz')
+vim.keymap.set('n', 'N', 'Nzz')
+vim.keymap.set('n', '*', '*zz')
+vim.keymap.set('n', '#', '#zz')
+
+-- exit terminal mode
+-- vim.keymap.set('t', '<esc><esc>', '<C-\\><C-n>')
+
+-- deal with line wrap
+vim.keymap.set('n', 'j', 'v:count == 0 ? "gj" : "j"', { expr = true })
+vim.keymap.set('n', 'k', 'v:count == 0 ? "gk" : "k"', { expr = true })
+
+-- universal diagnostics keymaps
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
+
+-- highlight region after yanking
+vim.api.nvim_create_autocmd('TextYankPost', {
+    pattern = '*',
+    group = vim.api.nvim_create_augroup('YankHighlight', { clear = true }),
+    callback = function()
+        vim.highlight.on_yank({ higroup = 'IncSearch', timeout = 200 })
+    end,
+})
+
 -- install plugin manager
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.loop.fs_stat(lazypath) then
@@ -21,91 +133,114 @@ vim.opt.rtp:prepend(lazypath)
 
 -- define and configure plugins
 require('lazy').setup({
-    'tpope/vim-commentary',             -- comment line/region
-    'tpope/vim-surround',               -- edit sorrounding with text objects
-    'tpope/vim-fugitive',               -- git wrapper
-    'tpope/vim-sleuth',                 -- detect tabs automatically
-    'vim-scripts/ReplaceWithRegister',  -- replace text object with register content
-    'mbbill/undotree',                  -- undo view
-    'mg979/vim-visual-multi',           -- multicursor editing
-    'lervag/vimtex',                    -- latex all-around helper
-    {
-        -- quickstart configs for lsp
-        'neovim/nvim-lspconfig',
-        dependencies = {
-            -- servers package manager
-            {'williamboman/mason.nvim'},
-            {'williamboman/mason-lspconfig.nvim'},
-        },
-        config = function()
-            -- function executed when server get attached to buffer
-	    local on_attach = function(client, bufnr)
-                -- disable annoying lsp syntax highlighting
-                client.server_capabilities.semanticTokensProvider = nil
+    -- detect tabs automatically
+    'tpope/vim-sleuth',
 
-                local fzf = require('fzf-lua')
-                local opts = {buffer = bufnr, remap = false}
+    -- git wrapper
+    'tpope/vim-fugitive',
 
-                -- show symbols info
-                vim.keymap.set('n', '<c-k>', vim.lsp.buf.signature_help, opts)
-                vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    -- edit surroundings with textobjects
+    'tpope/vim-surround',
 
-                vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
-                vim.keymap.set('n', 'grn', vim.lsp.buf.rename, opts)
+    -- replace inside textobject with register content using 'gr'
+    'vim-scripts/ReplaceWithRegister',
 
-                vim.keymap.set('n', '<leader>gr', fzf.lsp_references, opts)
-                vim.keymap.set('n', '<leader>gd', fzf.lsp_definitions, opts)
-                vim.keymap.set('n', '<leader>gi', fzf.lsp_implementations, opts)
-                vim.keymap.set('n', '<leader>gs', fzf.lsp_document_symbols, opts)
-                vim.keymap.set('n', '<leader>ws', fzf.lsp_live_workspace_symbols, opts)
-            end
+    -- multicursor editing
+    'mg979/vim-visual-multi',
 
-            require('mason').setup({})
-            require("mason-lspconfig").setup({})
+    -- undo tree view
+    'mbbill/undotree',
 
-            local servers = {
-                clangd = {},
-                lua_ls = {
-                    Lua = {
-                        diagnostics = {globals = {'vim'}},
-                        telemetry = {enable = false},
-                        runtime = {
-                            version = "LuaJIT",
-                            path = vim.split(package.path, ";"),
-                        },
-                        workspace = {
-                            library = { vim.env.VIMRUNTIME },
-                            checkThirdParty = false,
-                        },
-                    }
-                },
-            }
-
-            local mason_lspconfig = require('mason-lspconfig')
-            mason_lspconfig.setup({
-                ensure_installed = vim.tbl_keys(servers),
-            })
-
-            -- additional completion capabilitites
-            local capabilities = vim.lsp.protocol.make_client_capabilities()
-            capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
-
-            local lsp_config = require('lspconfig')
-            mason_lspconfig.setup_handlers({
-                function(server_name)
-                    lsp_config[server_name].setup({
-                        capabilities = capabilities,
-                        on_attach = on_attach,
-                        settings = servers[server_name],
-                        filetypes = (servers[server_name] or {}).filetypes,
-                    })
-                end,
-            })
-        end
+    { -- all-around helper for latex
+        'lervag/vimtex',
+        config = function() vim.g.vimtex_view_method = 'zathura' end,
     },
-    {
-        -- completion engine
+
+    -- comment region/lines
+    { 'numToStr/Comment.nvim', opts = {} },
+
+    { -- colorscheme
+        'ramojus/mellifluous.nvim',
+        priority = 1000,
+        init = function()
+            require('mellifluous').setup({})
+            vim.cmd.colorscheme('mellifluous')
+            vim.cmd.hi('Comment gui=none')
+        end,
+    },
+
+    { -- enhance textobjects functionalities
+        'echasnovski/mini.ai',
+        version = '*',
+        opts = {},
+    },
+
+    { -- highlight, edit and navigate code
+        'nvim-treesitter/nvim-treesitter',
+        main = 'nvim-treesitter.configs',
+        build = ':TSUpdate',
+        dependencies = {
+            'andymass/vim-matchup',
+            config = function()
+                vim.g.matchup_matchparen_offscreen = { method = 'popup' }
+                vim.cmd.hi('MatchWord gui=none')
+            end,
+        },
+        opts = {
+            ensure_installed = {
+                'bash',
+                'c',
+                'html',
+                'lua',
+                'markdown',
+                'vim',
+                'vimdoc',
+                'comment',
+            },
+            auto_install = true,
+            indent = { enable = true },
+            highlight = { enable = true },
+            matchup = {
+                enable = true,
+                disable_virtual_text = true,
+                include_match_words = true,
+            },
+        },
+    },
+
+    { -- file system navigation
+        'stevearc/oil.nvim',
+        config = function()
+            local oil = require('oil')
+            oil.setup({
+                delete_to_trash = true,
+                columns = { 'mtime', 'size', 'permissions' },
+                prompt_save_on_select_new_entry = false,
+                skip_confirm_for_simple_edits = true,
+                lsp_file_methods = { autosave_changes = false },
+            })
+
+            -- open parent directory
+            vim.keymap.set('n', '-', oil.open)
+        end,
+    },
+
+    { -- adds git related signs to the gutter
+        'lewis6991/gitsigns.nvim',
+        opts = {
+            signs = {
+                add = { text = '+' },
+                change = { text = '~' },
+                delete = { text = '_' },
+                topdelete = { text = '‾' },
+                changedelete = { text = '~' },
+            },
+        },
+    },
+
+    { -- completion engine
         'hrsh7th/nvim-cmp',
+        event = 'InsertEnter',
         dependencies = {
             -- snippet engine
             'L3MON4D3/LuaSnip',
@@ -122,7 +257,9 @@ require('lazy').setup({
         },
         config = function()
             local cmp = require('cmp')
-            local cmp_select = {behavior = cmp.SelectBehavior.Select}
+
+            -- don't insert selected option
+            local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
             -- load set of snippets
             require('luasnip.loaders.from_vscode').lazy_load()
@@ -133,176 +270,200 @@ require('lazy').setup({
                         require('luasnip').lsp_expand(args.body)
                     end,
                 },
-                sources = cmp.config.sources({
-                    {name = 'nvim_lsp'},
-                    {name = 'luasnip'},
-                    {name = 'path'},
-                }, {{name = 'buffer'}}
-                ),
                 mapping = cmp.mapping.preset.insert({
                     ['<c-p>'] = cmp.mapping.select_prev_item(cmp_select),
                     ['<c-n>'] = cmp.mapping.select_next_item(cmp_select),
-                    ['<c-y>'] = cmp.mapping.confirm({select = true}),
+                    ['<c-y>'] = cmp.mapping.confirm({ select = true }),
                     ['<c-d>'] = cmp.mapping.scroll_docs(4),
                     ['<c-u>'] = cmp.mapping.scroll_docs(-4),
-                })
+                    ['<C-e>'] = cmp.mapping.abort(),
+                }),
+                sources = cmp.config.sources({
+                    { name = 'nvim_lsp' },
+                    { name = 'luasnip' },
+                    { name = 'path' },
+                }, { name = 'buffer' }),
             })
-        end
+        end,
     },
-    {
-        -- further text objects
-        'echasnovski/mini.ai',
-        version = '*',
-        opts = {}
+
+    { -- fzf integration
+        'ibhagwan/fzf-lua',
+        config = function()
+            local fzf = require('fzf-lua')
+            fzf.setup({
+                'fzf-vim',
+                winopts = {
+                    split = '7split belowright new',
+                },
+            })
+            fzf.directories = function() fzf.files({ cmd = 'fd -t d' }) end
+            fzf.rg = function()
+                fzf.live_grep_native({ winopts = { split = 'belowright new' } })
+            end
+
+            vim.keymap.set('n', '<c-h>f', fzf.files)
+            vim.keymap.set('n', '<c-h>d', fzf.directories)
+            vim.keymap.set('n', '<c-h>r', fzf.resume)
+            vim.keymap.set('n', '<c-h>h', fzf.builtin)
+            vim.keymap.set('n', '<c-h>g', fzf.rg)
+            vim.keymap.set('n', '<c-h>b', fzf.buffers)
+            vim.keymap.set('v', '<c-h>v', fzf.grep_visual)
+        end,
     },
-    {
-        -- highlight, edit and navigate code
-        'nvim-treesitter/nvim-treesitter',
-        main = 'nvim-treesitter.configs',
-        build = ':TSUpdate',
+
+    { -- format tool
+        'stevearc/conform.nvim',
         opts = {
-            auto_install = true,
-            indent = {enable = true},
-            highlight = {enable = false},
-            incremental_selection = {
-                enable = true,
-                keymaps = {
-                    init_selection = '<c-space>',
-                    node_incremental = '<c-space>',
-                    node_decremental = '<M-space>',
-                    scope_incremental = '<c-s>',
+            notify_on_error = true,
+            formatters_by_ft = {
+                lua = { 'stylua' },
+                python = { 'autopep8', 'black' },
+                javascript = { { 'prettierd', 'prettier' } },
+            },
+        },
+    },
+
+    { -- lsp configuration
+        'neovim/nvim-lspconfig',
+        dependencies = {
+            -- automatically install LSPs to stdpath for neovim
+            'williamboman/mason.nvim',
+            'williamboman/mason-lspconfig.nvim',
+            'WhoIsSethDaniel/mason-tool-installer.nvim',
+        },
+        config = function()
+            vim.api.nvim_create_autocmd('LspAttach', {
+                group = vim.api.nvim_create_augroup(
+                    'lsp-config',
+                    { clear = true }
+                ),
+                callback = function(event)
+                    local client =
+                        vim.lsp.get_client_by_id(event.data.client_id)
+                    client.server_capabilities.semanticTokensProvider = nil
+
+                    local fzf = require('fzf-lua')
+                    local opts = { buffer = event.buf, remap = false }
+
+                    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+                    vim.keymap.set(
+                        'n',
+                        '<c-k>',
+                        vim.lsp.buf.signature_help,
+                        opts
+                    )
+                    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+                    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+
+                    vim.keymap.set('n', 'gd', fzf.lsp_definitions, opts)
+                    vim.keymap.set('n', 'gR', fzf.lsp_references, opts)
+                    vim.keymap.set('n', 'gI', fzf.lsp_implementations, opts)
+                    vim.keymap.set(
+                        'n',
+                        '<leader>ca',
+                        fzf.lsp_code_actions,
+                        opts
+                    )
+                    vim.keymap.set('n', '<leader>D', fzf.lsp_typedefs, opts)
+                    vim.keymap.set(
+                        'n',
+                        '<leader>ds',
+                        fzf.lsp_document_symbols,
+                        opts
+                    )
+                    vim.keymap.set(
+                        'n',
+                        '<leader>ws',
+                        fzf.lsp_live_workspace_symbols,
+                        opts
+                    )
+
+                    vim.keymap.set(
+                        'n',
+                        '<leader>F',
+                        function()
+                            require('conform').format({ bufnr = event.buf })
+                        end,
+                        opts
+                    )
+                end,
+            })
+
+            local capabilities = vim.lsp.protocol.make_client_capabilities()
+            capabilities = vim.tbl_deep_extend(
+                'force',
+                capabilities,
+                require('cmp_nvim_lsp').default_capabilities()
+            )
+
+            local servers = {
+                pyright = {},
+                clangd = {},
+                lua_ls = {
+                    settings = {
+                        Lua = {
+                            runtime = { version = 'LuaJIT' },
+                            workspace = {
+                                checkThirdParty = false,
+                                library = {
+                                    '${3rd}/luv/library',
+                                    unpack(
+                                        vim.api.nvim_get_runtime_file('', true)
+                                    ),
+                                },
+                            },
+                            completion = { callSnippet = 'Replace' },
+                        },
+                    },
                 },
             }
-        }
-    },
-    {
-        -- file system navigation
-        'stevearc/oil.nvim',
-        opts = {
-            delete_to_trash = true,
-            columns = {'mtime', 'size', 'permissions'},
-            prompt_save_on_select_new_entry = false,
-            skip_confirm_for_simple_edits = true,
-            lsp_rename_autosave = true
-        }
-    },
-    {
-        -- fzf integration
-        'ibhagwan/fzf-lua',
-        build = './install --bin',
-        opts = {
-            'fzf-vim',
-            winopts = {split = 'belowright new'},
-        }
+
+            require('mason').setup()
+            local ensure_installed = vim.tbl_keys(servers)
+            vim.list_extend(ensure_installed, { 'stylua', 'autopep8' })
+            require('mason-tool-installer').setup({
+                ensure_installed = ensure_installed,
+            })
+
+            require('mason-lspconfig').setup({
+                handlers = {
+                    function(server_name)
+                        local server = servers[server_name]
+                        server.capabilities = vim.tbl_deep_extend(
+                            'force',
+                            {},
+                            capabilities,
+                            server.capabilities or {}
+                        )
+                        require('lspconfig')[server_name].setup(server)
+                    end,
+                },
+            })
+        end,
     },
 }, {})
 
-vim.cmd.colorscheme('habamax')
-
--- use zathura for pdf viewing
-vim.g.vimtex_view_method = 'zathura'
-
--- hide '~' at buffer end
-vim.opt.fillchars:append({eob = ' '})
-
--- show numbers
-vim.opt.number         = true
-vim.opt.relativenumber = true
-
--- set case insensitiveness, alter with \C
-vim.opt.ignorecase     = true
-vim.opt.smartcase      = true
-
--- make undo history everlasting
-vim.opt.undofile       = true
-
--- appropriate indent on new line
-vim.opt.smartindent    = true
-
--- proper tabs config
-vim.opt.tabstop        = 4
-vim.opt.softtabstop    = 4
-vim.opt.shiftwidth     = 4
-vim.opt.expandtab      = true
-
--- block swap file creation
-vim.opt.swapfile       = false
-
--- define languages for spelling feature
-vim.opt.spelllang      = {'en_us', 'it'}
-
--- ui tweaks
-vim.opt.termguicolors  = true
-vim.opt.cursorline     = true
-vim.opt.guicursor      = 'i:block'
-vim.opt.signcolumn     = 'yes'
-vim.opt.colorcolumn    = '80'
-vim.opt.pumheight      = 5
-vim.opt.cmdwinheight   = 5
-
--- diagnostics keymaps
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev)
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
-
--- exit insert mode
-vim.keymap.set('i', '<c-c>', '<esc>')
-
--- no highlight for matching words
-vim.keymap.set('n', '<leader>h', ':noh<cr>', {silent = true})
-
--- move selected text horizontally
-vim.keymap.set('v', '>', '>gv')
-vim.keymap.set('v', '<', '<gv')
-
--- yank into system register
-vim.keymap.set('v', '<leader>y', '"+y')
-
--- delete without yanking
-vim.keymap.set('v', '<leader>d', '"_d')
-
--- deal with line wrap
-vim.keymap.set('n', 'j', 'v:count == 0 ? "gj" : "j"', {expr = true})
-vim.keymap.set('n', 'k', 'v:count == 0 ? "gk" : "k"', {expr = true})
-
--- open parent directory
-vim.keymap.set('n', '-', require('oil').open)
-
-local fzf = require('fzf-lua')
-vim.keymap.set('n', '<leader>k', fzf.builtin)
-
--- find directories recursively
-vim.keymap.set('n', '<leader>d', function() fzf.files({cmd = 'find . -not -path "*/.*" -type d'}) end)
-
--- find all files except executable ones
-vim.keymap.set('n', '<leader>f', function() fzf.files({cmd = 'find . ! -perm -111 -not -path "*/.*"'}) end)
-
--- live grep working directory
-vim.keymap.set('n', '<leader>s', fzf.live_grep_native)
-
--- grep visual selection
-vim.keymap.set('v', '<leader>s', fzf.grep_visual)
-
 -- configure diagnostics behaviour
-vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(
-    vim.lsp.diagnostic.on_publish_diagnostics,
-    {
+vim.lsp.handlers['textDocument/publishDiagnostics'] =
+    vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
         update_in_insert = true,
+        virtual_text = true,
         underline = false,
-        virtual_text = false,
-        signs = false
-    }
-)
+        signs = false,
+    })
 
--- highlight region after yanking
-vim.api.nvim_create_autocmd('TextYankPost', {
+-- jump to last edit position on opening file
+vim.api.nvim_create_autocmd('BufReadPost', {
     pattern = '*',
-    group = vim.api.nvim_create_augroup('YankHighlight', {clear = true}),
     callback = function()
-        vim.highlight.on_yank({higroup = 'IncSearch', timeout = 200})
-    end
+        if
+            vim.fn.line('\'"') > 1
+            and vim.fn.line('\'"') <= vim.fn.line('$')
+        then
+            if not vim.fn.expand('%:p'):find('.git', 1, true) then
+                vim.cmd('exe "normal! g\'\\""')
+            end
+        end
+    end,
 })
-
--- remember last position in files
-vim.cmd [[ au BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | exe "normal! g`\"" | endif ]]
